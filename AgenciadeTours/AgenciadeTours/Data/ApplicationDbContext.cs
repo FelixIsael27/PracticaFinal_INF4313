@@ -1,6 +1,5 @@
 ﻿using AgenciadeTours.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Metrics;
 
 namespace AgenciadeTours.Data
 {

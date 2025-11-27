@@ -1,0 +1,137 @@
+﻿using AgenciadeTours.Data;
+using AgenciadeTours.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Text;
+
+namespace AgenciadeTours.Controllers
+{
+    public class ToursController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+
+        public ToursController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<IActionResult> Mostrar()
+        {
+            var tours = await _context.Tours
+                .Include(t => t.Pais)
+                .Include(t => t.Destino)
+                .ToListAsync();
+
+            return View(tours);
+        }
+
+        public IActionResult Agregar()
+        {
+            ViewBag.Paises = _context.Paises.ToList();
+            ViewBag.Destinos = _context.Destinos.ToList();
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Agregar(Tour model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Paises = _context.Paises.ToList();
+                ViewBag.Destinos = _context.Destinos.ToList();
+                return View(model);
+            }
+
+            if (_context.Tours.Any(x => x.TourID == model.TourID))
+            {
+                ModelState.AddModelError("", "El ID del tour ya existe.");
+                return View(model);
+            }
+
+            model.ITBIS = model.Precio * 0.18;
+
+            var destino = await _context.Destinos.FindAsync(model.DestinoID);
+
+            model.Duracion = destino.Dias_Duracion;
+            model.FechaFinal = destino.Horas_Duracion;
+
+            var inicio = model.Fecha.AddHours(model.Hora.Hours).AddMinutes(model.Hora.Minutes);
+            model.FechaFinal = inicio.AddDays(destino.Dias_Duracion).AddHours(destino.Horas_Duracion);
+
+            model.Estado = inicio > DateTime.Now ? "Vigente" : "No vigente";
+
+            _context.Tours.Add(model);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Mostrar));
+        }
+
+        public async Task<IActionResult> Actualizar(int id)
+        {
+            var tour = await _context.Tours.FindAsync(id);
+            ViewBag.Paises = _context.Paises.ToList();
+            ViewBag.Destinos = _context.Destinos.ToList();
+            return View(tour);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Actualizaar(Tour model)
+        {
+            if (!_context.Tours.Any(x => x.TourID == model.TourID))
+            {
+                ModelState.AddModelError("", "El ID no existe.");
+                return View(model);
+            }
+
+            model.ITBIS = model.Precio * 0.18;
+            var destino = await _context.Destinos.FindAsync(model.DestinoID);
+
+            model.Duracion = destino.Dias_Duracion;
+            model.FechaFinal = destino.Horas_Duracion;
+            var inicio = model.Fecha.AddHours(model.Hora.Hours).AddMinutes(model.Hora.Minutes);
+            model.FechaFinal = inicio.AddDays(destino.Dias_Duracion).AddHours(destino.Horas_Duracion);
+            model.Estado = inicio > DateTime.Now ? "Vigente" : "No vigente";
+
+            _context.Tours.Update(model);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Mostrar));
+        }
+
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            var tour = await _context.Tours
+                .Include(x => x.Destino)
+                .Include(x => x.Pais)
+                .FirstOrDefaultAsync(x => x.TourID == id);
+
+            return View(tour);
+        }
+
+        [HttpPost, ActionName("Eliminar")]
+        public async Task<IActionResult> ConfirmarEliminacion(int id)
+        {
+            var tour = await _context.Tours.FindAsync(id);
+            _context.Tours.Remove(tour);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Mostrar));
+        }
+
+        public async Task<IActionResult> ExportarCSV()
+        {
+            var lista = await _context.Tours
+                .Include(a => a.Pais)
+                .Include(a => a.Destino)
+                .ToListAsync();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("ID,Nombre,Pais,Destino,Fecha,Hora,Precio,ITBIS,Estado");
+
+            foreach (var t in lista)
+            {
+                sb.AppendLine($"{t.TourID},{t.Nombre},{t.Pais.Nombre},{t.Destino.Nombre},{t.Fecha.ToShortDateString()},{t.Hora},{t.Precio},{t.ITBIS},{t.Estado}");
+            }
+
+            return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", "Tours.csv");
+        }
+    }
+}

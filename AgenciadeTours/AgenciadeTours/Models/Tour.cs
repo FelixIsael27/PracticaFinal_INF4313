@@ -30,18 +30,30 @@ namespace AgenciadeTours.Models
         public decimal Precio { get; set; }
 
         [NotMapped]
-        public decimal ITBIS => CalcularITBIS();
+        public decimal ITBIS { get; set; }
 
         [NotMapped]
-        public TimeSpan Duracion => CalcularDuracion();
+        public TimeSpan Duracion { get; set; }
 
         [NotMapped]
-        public DateTime FechaFinal => CalcularFechaFinal();
+        public DateTime FechaFinal
+        {
+            get
+            { 
+                return CalcularFechaFinal(); 
+            }
+            set { }
+        }
 
         [NotMapped]
-        public string Estado => CalcularEstado();
-
-        private decimal CalcularITBIS() => Math.Round(Precio * 0.18m, 2);
+        public string Estado
+        {
+            get 
+            { 
+                return CalcularEstado(); 
+            }
+            set { }
+        }
 
         private TimeSpan CalcularDuracion()
         {

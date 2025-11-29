@@ -48,12 +48,20 @@ namespace AgenciadeTours.Controllers
                 return View(model);
             }
 
-            model.ITBIS = model.Precio * 0.18;
+            model.ITBIS = Math.Round(model.Precio * 0.18m, 2);
 
             var destino = await _context.Destinos.FindAsync(model.DestinoID);
+            if (destino == null) 
+            {
+                ModelState.AddModelError("", "Destino no encontrado");
+                return View(destino);
+            }
+
+            TimeSpan duracion = new TimeSpan(destino.Dias_Duracion, destino.Horas_Duracion, 0, 0);
+            model.Duracion = duracion;
 
             model.Duracion = destino.Dias_Duracion;
-            model.FechaFinal = destino.Horas_Duracion;
+            model.Hora = destino.Horas_Duracion;
 
             var inicio = model.Fecha.AddHours(model.Hora.Hours).AddMinutes(model.Hora.Minutes);
             model.FechaFinal = inicio.AddDays(destino.Dias_Duracion).AddHours(destino.Horas_Duracion);
@@ -83,11 +91,11 @@ namespace AgenciadeTours.Controllers
                 return View(model);
             }
 
-            model.ITBIS = model.Precio * 0.18;
+            model.ITBIS = model.Precio * 0.18m;
             var destino = await _context.Destinos.FindAsync(model.DestinoID);
 
             model.Duracion = destino.Dias_Duracion;
-            model.FechaFinal = destino.Horas_Duracion;
+            model.Hora = destino.Horas_Duracion;
             var inicio = model.Fecha.AddHours(model.Hora.Hours).AddMinutes(model.Hora.Minutes);
             model.FechaFinal = inicio.AddDays(destino.Dias_Duracion).AddHours(destino.Horas_Duracion);
             model.Estado = inicio > DateTime.Now ? "Vigente" : "No vigente";

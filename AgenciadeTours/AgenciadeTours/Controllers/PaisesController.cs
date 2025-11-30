@@ -15,19 +15,19 @@ namespace AgenciadeTours.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Mostrar()
+        public async Task<IActionResult> Lista()
         {
             return View(await _context.Paises.ToListAsync());
         }
 
-        public IActionResult Agregar()
+        public IActionResult Crear()
         {
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Agregar(Pais pais)
+        public async Task<IActionResult> Crear(Pais pais)
         {
             if (ModelState.IsValid)
             {
@@ -41,7 +41,7 @@ namespace AgenciadeTours.Controllers
                 {
                     _context.Paises.Add(pais);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Mostrar));
+                    return RedirectToAction(nameof(Lista));
                 }
                 catch (Exception ex)
                 {
@@ -51,7 +51,7 @@ namespace AgenciadeTours.Controllers
             return View(pais);
         }
 
-        public async Task<IActionResult> Actualizar(int id)
+        public async Task<IActionResult> Editar(int id)
         {
             var pais = await _context.Paises.FindAsync(id);
             if (pais == null) return NotFound();
@@ -60,7 +60,7 @@ namespace AgenciadeTours.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Actualizar(Pais pais)
+        public async Task<IActionResult> Editar(Pais pais)
         {
             if (ModelState.IsValid)
             {
@@ -75,7 +75,7 @@ namespace AgenciadeTours.Controllers
                 {
                     _context.Paises.Update(pais);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Mostrar));
+                    return RedirectToAction(nameof(Lista));
                 }
                 catch (Exception ex)
                 {
@@ -100,7 +100,7 @@ namespace AgenciadeTours.Controllers
             if (pais == null)
             {
                 ModelState.AddModelError("", "No existe el ID.");
-                return RedirectToAction(nameof(Mostrar));
+                return RedirectToAction(nameof(Lista));
             }
 
             try
@@ -113,7 +113,7 @@ namespace AgenciadeTours.Controllers
                 ModelState.AddModelError("", "Error: " + ex.Message);
             }
 
-            return RedirectToAction(nameof(Mostrar));
+            return RedirectToAction(nameof(Lista));
         }
 
         public async Task<IActionResult> ExportarCSV()

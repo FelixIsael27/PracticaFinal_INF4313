@@ -15,12 +15,12 @@ namespace AgenciadeTours.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Mostrar()
+        public async Task<IActionResult> Lista()
         {
             return View(await _context.Destinos.Include(x => x.Pais).ToListAsync());
         }
 
-        public IActionResult Agregar()
+        public IActionResult Crear()
         {
             ViewBag.Paises = _context.Paises.ToList();
             return View();
@@ -28,7 +28,7 @@ namespace AgenciadeTours.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Agregar(Destino destino)
+        public async Task<IActionResult> Crear(Destino destino)
         {
             if (ModelState.IsValid)
             {
@@ -41,13 +41,13 @@ namespace AgenciadeTours.Controllers
 
                 _context.Destinos.Add(destino);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Mostrar));
+                return RedirectToAction(nameof(Lista));
             }
             ViewBag.Paises = _context.Paises.ToList();
             return View(destino);
         }
 
-        public async Task<IActionResult> Actualizar(int id)
+        public async Task<IActionResult> Editar(int id)
         {
             var destino = await _context.Destinos.FindAsync(id);
             if (destino == null) return NotFound();
@@ -58,7 +58,7 @@ namespace AgenciadeTours.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Actualizar(Destino destino)
+        public async Task<IActionResult> Editar(Destino destino)
         {
             if (!_context.Destinos.Any(x => x.DestinoID == destino.DestinoID))
             {
@@ -69,7 +69,7 @@ namespace AgenciadeTours.Controllers
 
             _context.Destinos.Update(destino);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Mostrar));
+            return RedirectToAction(nameof(Lista));
         }
 
         public async Task<IActionResult> Eliminar(int id)
@@ -88,7 +88,7 @@ namespace AgenciadeTours.Controllers
 
             _context.Destinos.Remove(destino);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Mostrar));
+            return RedirectToAction(nameof(Lista));
         }
 
         public async Task<IActionResult> ExportarCSV()

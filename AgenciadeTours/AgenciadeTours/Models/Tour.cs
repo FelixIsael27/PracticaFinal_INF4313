@@ -12,35 +12,74 @@ namespace AgenciadeTours.Models
         public string Nombre { get; set; }
 
         [Required]
+        [ForeignKey(nameof(Pais))]
         public int PaisID { get; set; }
         public Pais Pais { get; set; }
 
         [Required]
+        [ForeignKey(nameof(Destino))]
         public int DestinoID { get; set; }
         public Destino Destino { get; set; }
 
         [Required]
+        [DataType(DataType.Date)]
         public DateTime Fecha { get; set; }
 
         [Required]
+        [DataType(DataType.Time)]
         public TimeSpan Hora { get; set; }
 
         [Required]
         [Range(0, double.MaxValue)]
+        [DataType(DataType.Currency)]
         public decimal Precio { get; set; }
 
         [NotMapped]
-        public decimal ITBIS { get; set; }
+        public decimal ITBIS
+        {
+            get
+            {
+                return Math.Round(Precio * 0.18m, 2);
+            }
+            set { }
+        }
 
         [NotMapped]
-        public TimeSpan Duracion { get; set; }
+        public int Duracion_Dias 
+        { 
+            get 
+            {
+                return Destino != null ? Destino.Dias_Duracion : 0;
+            }
+            set { }
+        }
 
         [NotMapped]
-        public DateTime FechaFinal
+        public int Duracion_Horas
+        {
+            get
+            {
+                return Destino != null ? Destino.Horas_Duracion : 0;
+            }
+            set { }
+        }
+
+        [NotMapped]
+        public DateTime FechaHoraInicio
         {
             get
             { 
-                return CalcularFechaFinal(); 
+                return CalcularFechaHoraInicio(); 
+            }
+            set { }
+        }
+
+        [NotMapped]
+        public DateTime FechaHoraFin
+        {
+            get
+            {
+                return CalcularFechaHoraFin();
             }
             set { }
         }
@@ -55,16 +94,16 @@ namespace AgenciadeTours.Models
             set { }
         }
 
-        private TimeSpan CalcularDuracion()
-        {
-            if (Destino == null) return TimeSpan.Zero;
-            return TimeSpan.FromDays(Destino.Dias_Duracion) + TimeSpan.FromHours(Destino.Horas_Duracion);
-        }
-
-        private DateTime CalcularFechaFinal()
+        private DateTime CalcularFechaHoraInicio()
         {
             var start = Fecha.Date + Hora;
-            return start + Duracion;
+            return start;
+        }
+
+        private DateTime CalcularFechaHoraFin()
+        {
+            var duracion = TimeSpan.FromDays(Duracion_Dias) + TimeSpan.FromHours(Duracion_Horas);
+            return FechaHoraInicio.Add(duracion);
         }
 
         private string CalcularEstado()

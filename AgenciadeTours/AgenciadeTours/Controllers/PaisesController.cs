@@ -26,19 +26,20 @@ namespace AgenciadeTours.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Agregar(Pais model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Agregar(Pais pais)
         {
             if (ModelState.IsValid)
             {
-                if (_context.Paises.Any(x => x.PaisID == model.PaisID))
+                if (_context.Paises.Any(x => x.PaisID == pais.PaisID))
                 {
                     ModelState.AddModelError("", "El ID ya existe.");
-                    return View(model);
+                    return View(pais);
                 }
 
                 try
                 {
-                    _context.Paises.Add(model);
+                    _context.Paises.Add(pais);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Mostrar));
                 }
@@ -47,7 +48,7 @@ namespace AgenciadeTours.Controllers
                     ModelState.AddModelError("", "Error: " + ex.Message);
                 }
             }
-            return View(model);
+            return View(pais);
         }
 
         public async Task<IActionResult> Actualizar(int id)
@@ -58,20 +59,21 @@ namespace AgenciadeTours.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Actualizar(Pais model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Actualizar(Pais pais)
         {
             if (ModelState.IsValid)
             {
-                var existe = await _context.Paises.AnyAsync(x => x.PaisID == model.PaisID);
+                var existe = await _context.Paises.AnyAsync(x => x.PaisID == pais.PaisID);
                 if (!existe)
                 {
                     ModelState.AddModelError("", "El ID no existe.");
-                    return View(model);
+                    return View(pais);
                 }
 
                 try
                 {
-                    _context.Paises.Update(model);
+                    _context.Paises.Update(pais);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Mostrar));
                 }
@@ -80,7 +82,7 @@ namespace AgenciadeTours.Controllers
                     ModelState.AddModelError("", "Error: " + ex.Message);
                 }
             }
-            return View(model);
+            return View(pais);
         }
 
         public async Task<IActionResult> Eliminar(int id)
@@ -91,6 +93,7 @@ namespace AgenciadeTours.Controllers
         }
 
         [HttpPost, ActionName("Eliminar")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmarEliminacion(int id)
         {
             var pais = await _context.Paises.FindAsync(id);

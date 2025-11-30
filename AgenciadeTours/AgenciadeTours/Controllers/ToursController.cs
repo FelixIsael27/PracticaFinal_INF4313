@@ -33,6 +33,7 @@ namespace AgenciadeTours.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Agregar(Tour model)
         {
             if (!ModelState.IsValid)
@@ -57,16 +58,10 @@ namespace AgenciadeTours.Controllers
                 return View(destino);
             }
 
-            TimeSpan duracion = new TimeSpan(destino.Dias_Duracion, destino.Horas_Duracion, 0, 0);
-            model.Duracion = duracion;
+            var duracion = new TimeSpan(destino.Dias_Duracion, destino.Horas_Duracion, 0);
+            model.FechaHoraFin = model.Fecha.Add(duracion);
 
-            model.Duracion = destino.Dias_Duracion;
-            model.Hora = destino.Horas_Duracion;
-
-            var inicio = model.Fecha.AddHours(model.Hora.Hours).AddMinutes(model.Hora.Minutes);
-            model.FechaFinal = inicio.AddDays(destino.Dias_Duracion).AddHours(destino.Horas_Duracion);
-
-            model.Estado = inicio > DateTime.Now ? "Vigente" : "No vigente";
+            model.Estado = model.FechaHoraInicio >= DateTime.Now ? "Vigente" : "No vigente";
 
             _context.Tours.Add(model);
             await _context.SaveChangesAsync();
@@ -83,6 +78,7 @@ namespace AgenciadeTours.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Actualizaar(Tour model)
         {
             if (!_context.Tours.Any(x => x.TourID == model.TourID))
@@ -91,14 +87,19 @@ namespace AgenciadeTours.Controllers
                 return View(model);
             }
 
-            model.ITBIS = model.Precio * 0.18m;
-            var destino = await _context.Destinos.FindAsync(model.DestinoID);
+            model.ITBIS = Math.Round(model.Precio * 0.18m, 2);
 
-            model.Duracion = destino.Dias_Duracion;
-            model.Hora = destino.Horas_Duracion;
-            var inicio = model.Fecha.AddHours(model.Hora.Hours).AddMinutes(model.Hora.Minutes);
-            model.FechaFinal = inicio.AddDays(destino.Dias_Duracion).AddHours(destino.Horas_Duracion);
-            model.Estado = inicio > DateTime.Now ? "Vigente" : "No vigente";
+            var destino = await _context.Destinos.FindAsync(model.DestinoID);
+            if (destino == null)
+            {
+                ModelState.AddModelError("", "Destino no encontrado");
+                return View(destino);
+            }
+
+            var duracion = new TimeSpan(destino.Dias_Duracion, destino.Horas_Duracion, 0);
+            model.FechaHoraFin = model.Fecha.Add(duracion);
+
+            model.Estado = model.FechaHoraInicio >= DateTime.Now ? "Vigente" : "No vigente";
 
             _context.Tours.Update(model);
             await _context.SaveChangesAsync();
@@ -112,13 +113,17 @@ namespace AgenciadeTours.Controllers
                 .Include(x => x.Pais)
                 .FirstOrDefaultAsync(x => x.TourID == id);
 
+            if (tour == null) return NotFound();
             return View(tour);
         }
 
         [HttpPost, ActionName("Eliminar")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmarEliminacion(int id)
         {
             var tour = await _context.Tours.FindAsync(id);
+            if (tour == null) return NotFound();
+
             _context.Tours.Remove(tour);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Mostrar));

@@ -27,43 +27,47 @@ namespace AgenciadeTours.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Agregar(Destino model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Agregar(Destino destino)
         {
             if (ModelState.IsValid)
             {
-                if (_context.Destinos.Any(x => x.DestinoID == model.DestinoID))
+                if (_context.Destinos.Any(x => x.DestinoID == destino.DestinoID))
                 {
-                    ModelState.AddModelError("", "El ID ya existe.");
+                    ModelState.AddModelError("", "El ID del Destino ya existe.");
                     ViewBag.Paises = _context.Paises.ToList();
-                    return View(model);
+                    return View(destino);
                 }
 
-                _context.Destinos.Add(model);
+                _context.Destinos.Add(destino);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Mostrar));
             }
             ViewBag.Paises = _context.Paises.ToList();
-            return View(model);
+            return View(destino);
         }
 
         public async Task<IActionResult> Actualizar(int id)
         {
             var destino = await _context.Destinos.FindAsync(id);
+            if (destino == null) return NotFound();
+
             ViewBag.Paises = _context.Paises.ToList();
             return View(destino);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Actualizar(Destino model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Actualizar(Destino destino)
         {
-            if (!_context.Destinos.Any(x => x.DestinoID == model.DestinoID))
+            if (!_context.Destinos.Any(x => x.DestinoID == destino.DestinoID))
             {
                 ModelState.AddModelError("", "El ID no existe.");
                 ViewBag.Paises = _context.Paises.ToList();
-                return View(model);
+                return View(destino);
             }
 
-            _context.Destinos.Update(model);
+            _context.Destinos.Update(destino);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Mostrar));
         }
@@ -71,13 +75,17 @@ namespace AgenciadeTours.Controllers
         public async Task<IActionResult> Eliminar(int id)
         {
             var destino = await _context.Destinos.Include(a => a.Pais).FirstOrDefaultAsync(a => a.DestinoID == id);
+            if (destino == null) return NotFound();
             return View(destino);
         }
 
         [HttpPost, ActionName("Eliminar")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmarEliminacion(int id)
         {
             var destino = await _context.Destinos.FindAsync(id);
+            if (destino == null) return NotFound();
+
             _context.Destinos.Remove(destino);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Mostrar));

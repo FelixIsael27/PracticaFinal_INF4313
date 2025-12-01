@@ -29,30 +29,31 @@ namespace AgenciadeTours.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(Pais pais)
         {
-            if (ModelState.IsValid)
+            try
             {
-                if (_context.Paises.Any(x => x.PaisID == pais.PaisID))
+                if (await _context.Paises.AnyAsync(p => p.Nombre == pais.Nombre))
                 {
-                    ModelState.AddModelError("", "El ID ya existe.");
-                    return View(pais);
+                    ModelState.AddModelError("Nombre", "Ya existe un país con ese nombre.");
                 }
 
-                try
+                if (ModelState.IsValid)
                 {
-                    _context.Paises.Add(pais);
+                    _context.Add(pais);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Lista));
                 }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Error: " + ex.Message);
-                }
             }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Ocurrió un error inesperado: " + ex.Message);
+            }
+
             return View(pais);
         }
 
-        public async Task<IActionResult> Editar(int id)
+        public async Task<IActionResult> Editar(int? id)
         {
+            if (id == null)return NotFound();
             var pais = await _context.Paises.FindAsync(id);
             if (pais == null) return NotFound();
             return View(pais);
@@ -60,34 +61,35 @@ namespace AgenciadeTours.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Editar(Pais pais)
+        public async Task<IActionResult> Editar(int id, Pais pais)
         {
-            if (ModelState.IsValid)
-            {
-                var existe = await _context.Paises.AnyAsync(x => x.PaisID == pais.PaisID);
-                if (!existe)
-                {
-                    ModelState.AddModelError("", "El ID no existe.");
-                    return View(pais);
-                }
+            if (id != pais.PaisID)
+                return NotFound();
 
-                try
+            try
+            {
+                if (await _context.Paises.AnyAsync(p => p.Nombre == pais.Nombre && p.PaisID != id))
+                    ModelState.AddModelError("Nombre", "Ya existe otro país con ese nombre.");
+
+                if (ModelState.IsValid)
                 {
-                    _context.Paises.Update(pais);
+                    _context.Update(pais);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Lista));
                 }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Error: " + ex.Message);
-                }
             }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error al actualizar el país: " + ex.Message);
+            }
+
             return View(pais);
         }
 
-        public async Task<IActionResult> Eliminar(int id)
+        public async Task<IActionResult> Eliminar(int? id)
         {
-            var pais = await _context.Paises.FindAsync(id);
+            if (id == null) return NotFound();
+            var pais = await _context.Paises.FirstOrDefaultAsync(m => m.PaisID == id);
             if (pais == null) return NotFound();
             return View(pais);
         }
@@ -96,21 +98,28 @@ namespace AgenciadeTours.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmarEliminacion(int id)
         {
-            var pais = await _context.Paises.FindAsync(id);
-            if (pais == null)
-            {
-                ModelState.AddModelError("", "No existe el ID.");
-                return RedirectToAction(nameof(Lista));
-            }
-
             try
             {
+                var pais = await _context.Paises
+                    .Include(p => p.Destinos)
+                    .FirstOrDefaultAsync(p => p.PaisID == id);
+
+                if (pais == null) return NotFound();
+
+                if (pais.Destinos.Any())
+                {
+                    ModelState.AddModelError("", "No se puede eliminar un país con uno o varios destinos asociados.");
+                    return View(pais);
+                }
+
                 _context.Paises.Remove(pais);
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "Error: " + ex.Message);
+                ModelState.AddModelError("", "Error al eliminar el país: " + ex.Message);
+                var pais = await _context.Paises.FindAsync(id);
+                return View(pais);
             }
 
             return RedirectToAction(nameof(Lista));
@@ -124,8 +133,10 @@ namespace AgenciadeTours.Controllers
             sb.AppendLine("PaisID,Nombre");
 
             foreach (var p in lista)
+            {
                 sb.AppendLine($"{p.PaisID},{p.Nombre}");
-
+            }
+                
             return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", "Paises.csv");
         }
     }

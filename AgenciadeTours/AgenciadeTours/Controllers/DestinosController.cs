@@ -1,6 +1,7 @@
 ﻿using AgenciadeTours.Data;
 using AgenciadeTours.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 
@@ -22,7 +23,7 @@ namespace AgenciadeTours.Controllers
 
         public IActionResult Crear()
         {
-            ViewBag.Paises = _context.Paises.ToList();
+            ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre");
             return View();
         }
 
@@ -30,50 +31,71 @@ namespace AgenciadeTours.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(Destino destino)
         {
-            if (ModelState.IsValid)
+            try
             {
-                if (_context.Destinos.Any(x => x.DestinoID == destino.DestinoID))
+                if (await _context.Destinos.AnyAsync(d => d.Nombre == destino.Nombre && d.PaisID == destino.PaisID))
                 {
-                    ModelState.AddModelError("", "El ID del Destino ya existe.");
-                    ViewBag.Paises = _context.Paises.ToList();
-                    return View(destino);
+                    ModelState.AddModelError("Nombre", "Ya existe un destino con este nombre en este país.");
                 }
 
-                _context.Destinos.Add(destino);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Lista));
+                if (ModelState.IsValid)
+                {
+                    _context.Add(destino);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Lista));
+                }
             }
-            ViewBag.Paises = _context.Paises.ToList();
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Ocurrió un error: " + ex.Message);
+            }
+
+            ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre", destino.PaisID);
             return View(destino);
         }
 
-        public async Task<IActionResult> Editar(int id)
+        public async Task<IActionResult> Editar(int? id)
         {
+            if (id == null) return NotFound();
             var destino = await _context.Destinos.FindAsync(id);
             if (destino == null) return NotFound();
 
-            ViewBag.Paises = _context.Paises.ToList();
+            ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre", destino.PaisID);
             return View(destino);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Editar(Destino destino)
+        public async Task<IActionResult> Editar(int id, Destino destino)
         {
-            if (!_context.Destinos.Any(x => x.DestinoID == destino.DestinoID))
+            if (id != destino.DestinoID) return NotFound();
+
+            try
             {
-                ModelState.AddModelError("", "El ID no existe.");
-                ViewBag.Paises = _context.Paises.ToList();
-                return View(destino);
+                if (await _context.Destinos.AnyAsync(d => d.Nombre == destino.Nombre && d.PaisID == destino.PaisID && d.DestinoID != destino.DestinoID))
+                {
+                    ModelState.AddModelError("Nombre", "Ya existe otro destino con ese nombre en este país.");
+                }
+
+                if (ModelState.IsValid)
+                {
+                    _context.Update(destino);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Lista));
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error al actualizar el destino: " + ex.Message);
             }
 
-            _context.Destinos.Update(destino);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Lista));
+            ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre", destino.PaisID);
+            return View(destino);
         }
 
-        public async Task<IActionResult> Eliminar(int id)
+        public async Task<IActionResult> Eliminar(int? id)
         {
+            if (id == null) return NotFound();
             var destino = await _context.Destinos.Include(a => a.Pais).FirstOrDefaultAsync(a => a.DestinoID == id);
             if (destino == null) return NotFound();
             return View(destino);
@@ -83,11 +105,22 @@ namespace AgenciadeTours.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmarEliminacion(int id)
         {
-            var destino = await _context.Destinos.FindAsync(id);
-            if (destino == null) return NotFound();
+            try
+            {
+                var destino = await _context.Destinos.FindAsync(id);
 
-            _context.Destinos.Remove(destino);
-            await _context.SaveChangesAsync();
+                if (destino == null) return NotFound();
+
+                _context.Destinos.Remove(destino);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error al eliminar el destino: " + ex.Message);
+                var destino = await _context.Destinos.FindAsync(id);
+                return View(destino);
+            }
+
             return RedirectToAction(nameof(Lista));
         }
 
@@ -96,10 +129,12 @@ namespace AgenciadeTours.Controllers
             var lista = await _context.Destinos.Include(x => x.Pais).ToListAsync();
             var sb = new StringBuilder();
 
-            sb.AppendLine("DestinoID,Nombre,Pais");
+            sb.AppendLine("DestinoID,Nombre,Pais,Dias_Duracion,Horas_Duracion");
 
             foreach (var d in lista)
-                sb.AppendLine($"{d.DestinoID},{d.Nombre},{d.Pais.Nombre}");
+            {
+                sb.AppendLine($"{d.DestinoID},{d.Nombre},{d.Pais.Nombre},{d.Dias_Duracion},{d.Horas_Duracion}");
+            }
 
             return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", "Destinos.csv");
         }

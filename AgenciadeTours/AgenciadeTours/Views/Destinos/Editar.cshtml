@@ -33,6 +33,14 @@
         <span asp-validation-for="Horas_Duracion" class="text-danger"></span>
     </div>
 
+    <br />
+
     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
     <a asp-action="Lista" class="btn btn-secondary">Volver a la Lista</a>
 </form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

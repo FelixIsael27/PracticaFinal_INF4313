@@ -47,3 +47,5 @@ VALUES ('Punta Cana', 1, 5, 6), ('Cancún Hotel Zone', 2, 4, 8), ('Madrid Centro 
 INSERT INTO Tours (Nombre, PaisID, DestinoID, Fecha, Hora, Precio)
 VALUES ('Tour Playa Bávaro Premium', 1, 1, '2025-07-15', '09:00', 150.00), ('Tour Isla Mujeres Deluxe', 2, 2, '2025-08-10', '08:30', 220.00),
 ('Tour Museo del Prado & Caminata Histórica', 3, 3, '2025-09-05', '10:00', 180.00);
+
+select * from Paises

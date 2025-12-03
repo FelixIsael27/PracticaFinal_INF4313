@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AgenciadeTours.Models.AgenciadeTours;
 
-public partial class Paise
+public partial class Pais
 {
     public int PaisId { get; set; }
 

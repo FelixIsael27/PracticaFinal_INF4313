@@ -17,7 +17,7 @@ public partial class AgenciadeToursContext : DbContext
 
     public virtual DbSet<Destino> Destinos { get; set; }
 
-    public virtual DbSet<Paise> Paises { get; set; }
+    public virtual DbSet<Pais> Paises { get; set; }
 
     public virtual DbSet<Tour> Tours { get; set; }
 
@@ -43,7 +43,7 @@ public partial class AgenciadeToursContext : DbContext
                 .HasConstraintName("FK_Destinos_Paises");
         });
 
-        modelBuilder.Entity<Paise>(entity =>
+        modelBuilder.Entity<Pais>(entity =>
         {
             entity.HasKey(e => e.PaisId).HasName("PK__Paises__B501E1A5AF30474E");
 

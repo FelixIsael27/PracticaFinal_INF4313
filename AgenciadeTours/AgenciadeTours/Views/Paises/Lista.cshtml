@@ -23,7 +23,7 @@
                 <td>@item.Nombre</td>
                 <td>
                     <a asp-action="Editar" asp-route-id="@item.PaisID" class="btn btn-sm btn-warning">Actualizar</a>
-                    <a asp-action="ConfirmarEliminacion" asp-route-id="@item.PaisID" class="btn btn-sm btn-danger">Eliminar</a>
+                    <a asp-action="Eliminar" asp-route-id="@item.PaisID" class="btn btn-sm btn-danger">Eliminar</a>
                 </td>
             </tr>
         }

@@ -18,7 +18,7 @@ namespace AgenciadeTours.Controllers
 
         public async Task<IActionResult> Lista()
         {
-            return View(await _context.Destinos.Include(x => x.Pais).ToListAsync());
+            return View(await _context.Destinos.OrderBy(p => p.DestinoID).Include(x => x.Pais).ToListAsync());
         }
 
         public IActionResult Crear()
@@ -31,27 +31,21 @@ namespace AgenciadeTours.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(Destino destino)
         {
-            try
+            
+            if (await _context.Destinos.AnyAsync(d => d.Nombre == destino.Nombre && d.PaisID == destino.PaisID))
             {
-                if (await _context.Destinos.AnyAsync(d => d.Nombre == destino.Nombre && d.PaisID == destino.PaisID))
-                {
-                    ModelState.AddModelError("Nombre", "Ya existe un destino con este nombre en este país.");
-                }
-
-                if (ModelState.IsValid)
-                {
-                    _context.Add(destino);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Lista));
-                }
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Ocurrió un error: " + ex.Message);
+                ModelState.AddModelError("Nombre", "Ya existe un destino con este nombre en este país.");
             }
 
-            ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre", destino.PaisID);
-            return View(destino);
+            if (ModelState.IsValid)
+            {
+                ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre", destino.PaisID);
+                return View(destino);
+            }
+
+            _context.Add(destino);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Lista));
         }
 
         public async Task<IActionResult> Editar(int? id)
@@ -70,27 +64,20 @@ namespace AgenciadeTours.Controllers
         {
             if (id != destino.DestinoID) return NotFound();
 
-            try
+            if (await _context.Destinos.AnyAsync(d => d.Nombre == destino.Nombre && d.PaisID == destino.PaisID && d.DestinoID != destino.DestinoID))
             {
-                if (await _context.Destinos.AnyAsync(d => d.Nombre == destino.Nombre && d.PaisID == destino.PaisID && d.DestinoID != destino.DestinoID))
-                {
-                    ModelState.AddModelError("Nombre", "Ya existe otro destino con ese nombre en este país.");
-                }
-
-                if (ModelState.IsValid)
-                {
-                    _context.Update(destino);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Lista));
-                }
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Error al actualizar el destino: " + ex.Message);
+                ModelState.AddModelError("Nombre", "Ya existe otro destino con ese nombre en este país.");
             }
 
-            ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre", destino.PaisID);
-            return View(destino);
+            if (ModelState.IsValid)
+            {
+                ViewBag.PaisID = new SelectList(_context.Paises, "PaisID", "Nombre", destino.PaisID);
+                return View(destino);
+            }
+
+            _context.Update(destino);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Lista));
         }
 
         public async Task<IActionResult> Eliminar(int? id)

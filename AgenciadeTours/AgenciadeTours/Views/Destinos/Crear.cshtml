@@ -6,7 +6,8 @@
 
 <h2>Nuevo Destino</h2>
 
-<form asp-action="Crear">
+<form asp-action="Crear" method="post">
+    @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="form-group">

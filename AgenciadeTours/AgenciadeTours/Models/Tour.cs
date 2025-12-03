@@ -45,9 +45,9 @@ namespace AgenciadeTours.Models
         }
 
         [NotMapped]
-        public int Duracion_Dias 
-        { 
-            get 
+        public int Duracion_Dias
+        {
+            get
             {
                 return Destino != null ? Destino.Dias_Duracion : 0;
             }
@@ -68,8 +68,8 @@ namespace AgenciadeTours.Models
         public DateTime FechaHoraInicio
         {
             get
-            { 
-                return CalcularFechaHoraInicio(); 
+            {
+                return CalcularFechaHoraInicio();
             }
             set { }
         }
@@ -87,9 +87,9 @@ namespace AgenciadeTours.Models
         [NotMapped]
         public string Estado
         {
-            get 
-            { 
-                return CalcularEstado(); 
+            get
+            {
+                return CalcularEstado();
             }
             set { }
         }

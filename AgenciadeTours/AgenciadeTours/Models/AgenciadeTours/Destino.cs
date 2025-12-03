@@ -15,7 +15,7 @@ public partial class Destino
 
     public int HorasDuracion { get; set; }
 
-    public virtual Paise Pais { get; set; } = null!;
+    public virtual Pais Pais { get; set; } = null!;
 
     public virtual ICollection<Tour> Tours { get; set; } = new List<Tour>();
 }

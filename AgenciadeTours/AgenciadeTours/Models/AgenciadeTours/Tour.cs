@@ -21,5 +21,5 @@ public partial class Tour
 
     public virtual Destino Destino { get; set; } = null!;
 
-    public virtual Paise Pais { get; set; } = null!;
+    public virtual Pais Pais { get; set; } = null!;
 }

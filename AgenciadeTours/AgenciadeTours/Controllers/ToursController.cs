@@ -75,12 +75,6 @@ namespace AgenciadeTours.Controllers
                     ModelState.AddModelError("Fecha", "La fecha no puede ser una fecha pasada.");
                 }
 
-                if (destino != null)
-                {
-                    tour.Destino = destino;
-                    tour.Pais = _context.Paises.Find(tour.PaisID);
-                }
-
                 if (ModelState.IsValid)
                 {
                     _context.Add(tour);

@@ -53,7 +53,7 @@ namespace AgenciadeTours.Controllers
 
         public async Task<IActionResult> Editar(int? id)
         {
-            if (id == null)return NotFound();
+            if (id == null) return NotFound();
             var pais = await _context.Paises.FindAsync(id);
             if (pais == null) return NotFound();
             return View(pais);
@@ -63,8 +63,7 @@ namespace AgenciadeTours.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(int id, Pais pais)
         {
-            if (id != pais.PaisID)
-                return NotFound();
+            if (id != pais.PaisID) return NotFound();
 
             try
             {

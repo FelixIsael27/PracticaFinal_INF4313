@@ -9,12 +9,12 @@ namespace AgenciadeTours.Models
         public int DestinoID { get; set; }
 
         [Required, StringLength(150)]
-        public required string Nombre { get; set; }
+        public string Nombre { get; set; }
 
         [Required]
         [ForeignKey(nameof(Pais))]
         public int PaisID { get; set; }
-        public Pais Pais { get; set; }
+        public virtual Pais Pais { get; set; }
 
         [Range(0, 365, ErrorMessage = "Días de duración inválidos.")]
         public int Dias_Duracion { get; set; }

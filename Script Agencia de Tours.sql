@@ -34,3 +34,6 @@ CONSTRAINT FK_Tours_Destinos
 FOREIGN KEY (DestinoID) REFERENCES Destinos(DestinoID)
 )
 
+CREATE INDEX IX_Destinos_Paises ON Destinos(PaisID);
+CREATE INDEX IX_Tours_Paises ON Tours(PaisID);
+CREATE INDEX IX_Tours_Destinos ON Tours(DestinoID);
